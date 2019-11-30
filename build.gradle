@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'MoneyTransfers'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 11
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    compile 'org.eclipse.jetty:jetty-server:9.4.24.v20191120'
+    compile 'org.eclipse.jetty:jetty-servlet:9.4.24.v20191120'
+
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.29.1'
+    compile 'org.glassfish.jersey.inject:jersey-hk2:2.29.1'
+
+    testCompile 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
+    testcompile 'org.hamcrest:hamcrest:2.2'
+
+    //compile 'javax.xml.bind:jaxb-api:2.3.1'
+}
