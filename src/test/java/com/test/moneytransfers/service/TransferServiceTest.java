@@ -2,9 +2,12 @@ package com.test.moneytransfers.service;
 
 import com.test.moneytransfers.dto.AccountDto;
 import com.test.moneytransfers.dto.AccountPostRequetDto;
+import com.test.moneytransfers.dto.TransferDto;
+import com.test.moneytransfers.dto.TransferRequestDto;
 import com.test.moneytransfers.server.MoneyTransferServer;
 import org.eclipse.jetty.server.Server;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +59,7 @@ public class TransferServiceTest {
         assertEquals("EUR", createdAcc.currency);
     }*/
 
-    @Test
+    /*@Test
     public void shootTheServer() throws Exception {
         final int num = 12;
 
@@ -77,6 +80,59 @@ public class TransferServiceTest {
 
         assertThat(ids, hasSize(num));
         assertThat(ids, containsInAnyOrder(rangeClosed(1, num).boxed().toArray()));
+    }*/
+
+
+    @Test
+    public void testTransfers() throws Exception {
+
+        client.target("http://localhost:8081/accounts")
+              .request()
+              .post(Entity.json(new AccountPostRequetDto("EUR", "100.00")));
+
+        client.target("http://localhost:8081/accounts")
+              .request()
+              .post(Entity.json(new AccountPostRequetDto("EUR", "100.00")));
+
+        final int num = 10;
+
+        ExecutorService pool = Executors.newFixedThreadPool(2 * num);
+
+        List<Future<Response>> first = IntStream.range(0, num)
+                                              .mapToObj(i -> pool.submit(() ->
+                                                                             client.target("http://localhost:8081/accounts/transfers")
+                                                                                   .request()
+                                                                                   .post(Entity.json(new TransferRequestDto(1l, 2l, "1.00")))))
+                                              .collect(Collectors.toList());
+
+        List<Future<Response>> second = IntStream.range(0, num)
+                                                .mapToObj(i -> pool.submit(() ->
+                                                                               client.target("http://localhost:8081/accounts/transfers")
+                                                                                     .request()
+                                                                                     .post(Entity.json(new TransferRequestDto(2l, 1l, "3.00")))))
+                                                .collect(Collectors.toList());
+
+        List<Long> ids = new ArrayList<>();
+
+        second.addAll(first);
+        for (Future<Response> responseFuture : second) {
+            var transferDto = responseFuture.get().readEntity(TransferDto.class);
+            ids.add(transferDto.id);
+        }
+
+        String balance1 = client.target("http://localhost:8081/accounts/1")
+                                  .request()
+                                  .get().readEntity(AccountDto.class).balance;
+
+        String balance2 = client.target("http://localhost:8081/accounts/2")
+                                .request()
+                                .get().readEntity(AccountDto.class).balance;
+
+        Assertions.assertEquals("120.00", balance1);
+        Assertions.assertEquals("80.00", balance2);
+
+        assertThat(ids, hasSize(2 * num));
+        assertThat(ids, containsInAnyOrder(rangeClosed(1, 2 * num).boxed().toArray()));
     }
 
 

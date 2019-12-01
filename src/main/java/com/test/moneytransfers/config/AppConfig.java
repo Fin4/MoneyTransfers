@@ -1,7 +1,7 @@
 package com.test.moneytransfers.config;
 
-import com.test.moneytransfers.service.AccountService;
-import com.test.moneytransfers.service.AccountServiceImpl;
+import com.test.moneytransfers.service.MoneyTransferService;
+import com.test.moneytransfers.service.InMemoryMoneyTransferService;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -17,7 +17,7 @@ public class AppConfig extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(AccountServiceImpl.class).to(AccountService.class).in(Singleton.class);
+                bind(InMemoryMoneyTransferService.class).to(MoneyTransferService.class).in(Singleton.class);
             }
         });
     }

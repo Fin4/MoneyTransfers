@@ -7,11 +7,11 @@ import java.util.Objects;
 
 public class Transfer {
 
-    private String id;
+    private Long id;
 
-    private String accNumberFrom;
+    private Long senderAccId;
 
-    private String accNumberTo;
+    private Long receiverAccId;
 
     private BigDecimal amount;
 
@@ -23,28 +23,28 @@ public class Transfer {
 
     private String notes;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getAccNumberFrom() {
-        return accNumberFrom;
+    public Long getSenderAccId() {
+        return senderAccId;
     }
 
-    public void setAccNumberFrom(String accNumberFrom) {
-        this.accNumberFrom = accNumberFrom;
+    public void setSenderAccId(Long senderAccId) {
+        this.senderAccId = senderAccId;
     }
 
-    public String getAccNumberTo() {
-        return accNumberTo;
+    public Long getReceiverAccId() {
+        return receiverAccId;
     }
 
-    public void setAccNumberTo(String accNumberTo) {
-        this.accNumberTo = accNumberTo;
+    public void setReceiverAccId(Long receiverAccId) {
+        this.receiverAccId = receiverAccId;
     }
 
     public BigDecimal getAmount() {
@@ -89,16 +89,20 @@ public class Transfer {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Transfer transfer = (Transfer) o;
-        return Objects.equals(accNumberFrom, transfer.accNumberFrom) &&
-                Objects.equals(accNumberTo, transfer.accNumberTo) &&
-                Objects.equals(timestamp, transfer.timestamp);
+        return Objects.equals(senderAccId, transfer.senderAccId) &&
+            Objects.equals(receiverAccId, transfer.receiverAccId) &&
+            Objects.equals(timestamp, transfer.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(accNumberFrom, accNumberTo, timestamp);
+        return Objects.hash(senderAccId, receiverAccId, timestamp);
     }
 }
