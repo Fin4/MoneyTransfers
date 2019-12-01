@@ -20,5 +20,5 @@ public interface MoneyTransferService {
 
     Account deposit(Long id, String amount);
 
-    Collection<Transfer> listTransfers();
+    Collection<Transfer> listTransfers(long id);
 }

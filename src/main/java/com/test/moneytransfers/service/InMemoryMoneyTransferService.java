@@ -144,8 +144,10 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
     }
 
     @Override
-    public Collection<Transfer> listTransfers() {
-        return transfers.values();
+    public Collection<Transfer> listTransfers(long id) {
+        return transfers.values().stream()
+                .filter(t -> t.getSenderAccId() == id)
+                .collect(Collectors.toList());
     }
 
     private class AccWrapper {

@@ -64,14 +64,14 @@ public class AccountResource {
     }
 
     @POST
-    @Path("/transfers")
+    @Path("/{id}/transfers")
     @Consumes({ MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON})
-    public Response transferMoney(TransferRequestDto transferRequest, @Context UriInfo uriInfo) {
+    public Response transferMoney(@PathParam("id") Long id, TransferRequestDto transferRequest, @Context UriInfo uriInfo) {
 
         var transfer = TransferDto.from(
                 transferService.transferMoney(
-                        transferRequest.getSenderId(),
+                        id,
                         transferRequest.getReceiverId(),
                         transferRequest.getAmount(),
                         transferRequest.getNotes()));
@@ -84,10 +84,10 @@ public class AccountResource {
     }
 
     @GET
-    @Path("/transfers")
+    @Path("/{id}/transfers")
     @Produces({ MediaType.APPLICATION_JSON})
-    public List<TransferDto> listTransfers() {
-        return transferService.listTransfers().stream()
+    public List<TransferDto> listTransfers(@PathParam("id") Long id) {
+        return transferService.listTransfers(id).stream()
             .map(TransferDto::from)
             .collect(Collectors.toList());
     }

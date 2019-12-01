@@ -105,9 +105,9 @@ public class AccountResourceTest {
         var receiverAcc = createAccount("EUR", "10.00")
                 .readEntity(AccountDto.class);
 
-        Response response = client.target("http://localhost:8081/accounts/transfers")
+        Response response = client.target("http://localhost:8081/accounts/" + senderAcc.id + "/transfers")
                 .request()
-                .post(Entity.json(new TransferRequestDto(senderAcc.id, receiverAcc.id, "55.33", "transfer notes")));
+                .post(Entity.json(new TransferRequestDto(receiverAcc.id, "55.33", "transfer notes")));
 
         var transfer = response.readEntity(TransferDto.class);
         var senderBalance = getBalance(senderAcc.id);
@@ -130,9 +130,9 @@ public class AccountResourceTest {
         var receiverAcc = createAccount("EUR", "10.00")
                 .readEntity(AccountDto.class);
 
-        Response response = client.target("http://localhost:8081/accounts/transfers")
+        Response response = client.target("http://localhost:8081/accounts/" + senderAcc.id + "/transfers")
                 .request()
-                .post(Entity.json(new TransferRequestDto(senderAcc.id, receiverAcc.id, "120", "transfer notes")));
+                .post(Entity.json(new TransferRequestDto(receiverAcc.id, "120", "transfer notes")));
 
         var message = response.readEntity(String.class);
         var senderBalance = getBalance(senderAcc.id);

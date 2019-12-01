@@ -84,9 +84,9 @@ public class TransfersConcurrencyTest {
     }
 
     private Response transferMoney(long senderId, long receiverId, String amount) {
-        return client.target("http://localhost:8081/accounts/transfers")
+        return client.target("http://localhost:8081/accounts/" + senderId + "/transfers")
                 .request()
-                .post(Entity.json(new TransferRequestDto(senderId, receiverId, amount, "bla bla bla")));
+                .post(Entity.json(new TransferRequestDto(receiverId, amount, "bla bla bla")));
     }
 
     private <T> T get(Future<T> f) {

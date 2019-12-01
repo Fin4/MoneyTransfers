@@ -24,6 +24,4 @@ public class AppConfig extends ResourceConfig {
             }
         });
     }
-
-
 }
