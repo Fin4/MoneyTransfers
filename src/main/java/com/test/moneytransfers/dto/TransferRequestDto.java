@@ -8,13 +8,16 @@ public class TransferRequestDto {
 
   private String amount;
 
+  private String notes;
+
   public TransferRequestDto() {
   }
 
-  public TransferRequestDto(Long senderId, Long receiverId, String amount) {
+  public TransferRequestDto(Long senderId, Long receiverId, String amount, String notes) {
     this.senderId = senderId;
     this.receiverId = receiverId;
     this.amount = amount;
+    this.notes = notes;
   }
 
   public Long getSenderId() {
@@ -39,5 +42,13 @@ public class TransferRequestDto {
 
   public void setAmount(String amount) {
     this.amount = amount;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 }

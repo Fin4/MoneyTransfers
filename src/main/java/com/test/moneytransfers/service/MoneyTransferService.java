@@ -16,7 +16,9 @@ public interface MoneyTransferService {
 
     Account delete(Long id);
 
-    Transfer transferMoney(long senderAccId, long receiverAccId, String amount);
+    Transfer transferMoney(long senderAccId, long receiverAccId, String amount, String notes);
+
+    Account deposit(Long id, String amount);
 
     Collection<Transfer> listTransfers();
 }

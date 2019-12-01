@@ -6,7 +6,9 @@ import com.test.moneytransfers.errors.TransferException;
 import com.test.moneytransfers.model.Account;
 import com.test.moneytransfers.model.Transfer;
 
+import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Currency;
@@ -19,6 +21,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class InMemoryMoneyTransferService implements MoneyTransferService {
+
+
+    private final RateProvider rateProvider;
+
+    @Inject
+    public InMemoryMoneyTransferService(RateProvider rateProvider) {
+        this.rateProvider = rateProvider;
+    }
 
     private final ConcurrentHashMap<Long, AccWrapper> accounts = new ConcurrentHashMap<>();
 
@@ -37,6 +47,7 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
                        .collect(Collectors.toList());
     }
 
+    @Override
     public Account getById(Long id) {
 
         var accWrapper = Optional.ofNullable(accounts.get(id))
@@ -50,6 +61,7 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
         }
     }
 
+    @Override
     public Account create(AccountPostRequetDto accDto) {
         var account = new Account();
 
@@ -79,14 +91,15 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
       }
     }
 
-    public Transfer transferMoney(long senderAccId, long receiverAccId, String amount) {
+    @Override
+    public Transfer transferMoney(long senderAccId, long receiverAccId, String amount, String notes) {
 
         var senderAccWrapper = accounts.get(senderAccId);
         var receiverAccWrapper = accounts.get(receiverAccId);
 
-        var bigDecimalAmount = new BigDecimal(amount);
+        var withdrawal = new BigDecimal(amount).setScale(2, RoundingMode.CEILING);
 
-        if (senderAccWrapper.account.getBalance().compareTo(bigDecimalAmount) < 0)
+        if (senderAccWrapper.account.getBalance().compareTo(withdrawal) < 0)
             throw new TransferException("Transfer not possible, insufficient funds");
 
         //bottleneck
@@ -100,20 +113,25 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
 
         try {
             senderAccWrapper.account.setBalance(
-                senderAccWrapper.account.getBalance().subtract(bigDecimalAmount));
+                senderAccWrapper.account.getBalance().subtract(withdrawal));
+
+            var rate = rateProvider.getRate(senderAccWrapper.account.getCurrency(),
+                    receiverAccWrapper.account.getCurrency()).setScale(2, RoundingMode.CEILING);
+
+            var deposit = withdrawal.multiply(rate).setScale(2, RoundingMode.CEILING);
 
             receiverAccWrapper.account.setBalance(
-                receiverAccWrapper.account.getBalance().add(bigDecimalAmount));
+                receiverAccWrapper.account.getBalance().add(deposit));
 
             var transfer = new Transfer();
             transfer.setId(transferIdProvider.incrementAndGet());
             transfer.setReceiverAccId(receiverAccId);
             transfer.setSenderAccId(senderAccId);
-            transfer.setAmount(bigDecimalAmount);
+            transfer.setAmount(withdrawal);
             transfer.setCurrency(senderAccWrapper.account.getCurrency());
-            transfer.setRate(new BigDecimal("1.00"));
+            transfer.setRate(rate);
             transfer.setTimestamp(Instant.now());
-            transfer.setNotes("Some notes");
+            transfer.setNotes(notes);
 
             transfers.put(transfer.getId(), transfer);
 
@@ -142,6 +160,21 @@ public class InMemoryMoneyTransferService implements MoneyTransferService {
 
         public Account getAccount() {
             return account;
+        }
+    }
+
+    @Override
+    public Account deposit(Long id, String amount) {
+        var accWrapper = Optional.ofNullable(accounts.get(id))
+                .orElseThrow(() -> new NotFoundException("Account with given id does not exist"));
+
+        accWrapper.lock.writeLock().lock();
+        try {
+            var bigDecimalAmount = new BigDecimal(amount).setScale(2, RoundingMode.CEILING);;
+            accWrapper.account.setBalance(accWrapper.account.getBalance().add(bigDecimalAmount));
+            return accWrapper.account;
+        } finally {
+            accWrapper.lock.writeLock().unlock();
         }
     }
 }

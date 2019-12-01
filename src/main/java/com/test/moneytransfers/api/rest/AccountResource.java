@@ -18,24 +18,24 @@ import java.util.stream.Collectors;
 @Path("/accounts")
 public class AccountResource {
 
-    private MoneyTransferService accountService;
+    private final MoneyTransferService transferService;
 
     @Inject
-    public AccountResource(MoneyTransferService accountService) {
-        this.accountService = accountService;
+    public AccountResource(MoneyTransferService transferService) {
+        this.transferService = transferService;
     }
 
     @GET
     @Path("/{id}")
     @Produces({ MediaType.APPLICATION_JSON})
     public AccountDto getAccount(@PathParam("id") Long id) {
-        return AccountDto.from(accountService.getById(id));
+        return AccountDto.from(transferService.getById(id));
     }
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON})
     public List<AccountDto> getAccounts() {
-        return accountService.listAccounts().stream()
+        return transferService.listAccounts().stream()
                              .map(AccountDto::from)
                              .collect(Collectors.toList());
     }
@@ -45,7 +45,7 @@ public class AccountResource {
     @Produces({ MediaType.APPLICATION_JSON})
     public Response postAccount(AccountPostRequetDto accRequest, @Context UriInfo uriInfo) {
 
-        var createdAccount = AccountDto.from(accountService.create(accRequest));
+        var createdAccount = AccountDto.from(transferService.create(accRequest));
 
         var location = uriInfo.getAbsolutePathBuilder()
                               .path(createdAccount.id.toString())
@@ -55,15 +55,26 @@ public class AccountResource {
 
     }
 
+    @PATCH
+    @Path("/{id}")
+    @Consumes({ MediaType.TEXT_PLAIN})
+    @Produces({ MediaType.APPLICATION_JSON})
+    public AccountDto deposit(@PathParam("id") Long id, String amount) {
+        return AccountDto.from(transferService.deposit(id, amount));
+    }
+
     @POST
     @Path("/transfers")
     @Consumes({ MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON})
     public Response transferMoney(TransferRequestDto transferRequest, @Context UriInfo uriInfo) {
 
-        var transfer = TransferDto.from(accountService.transferMoney(transferRequest.getSenderId(),
-                                                                transferRequest.getReceiverId(),
-                                                                transferRequest.getAmount()));
+        var transfer = TransferDto.from(
+                transferService.transferMoney(
+                        transferRequest.getSenderId(),
+                        transferRequest.getReceiverId(),
+                        transferRequest.getAmount(),
+                        transferRequest.getNotes()));
 
         var location = uriInfo.getAbsolutePathBuilder()
                               .path(transfer.id.toString())
@@ -76,7 +87,7 @@ public class AccountResource {
     @Path("/transfers")
     @Produces({ MediaType.APPLICATION_JSON})
     public List<TransferDto> listTransfers() {
-        return accountService.listTransfers().stream()
+        return transferService.listTransfers().stream()
             .map(TransferDto::from)
             .collect(Collectors.toList());
     }
@@ -86,7 +97,7 @@ public class AccountResource {
     @Path("/{id}")
     @Produces({ MediaType.APPLICATION_JSON})
     public Response deleteAccount(@PathParam("id") Long id) {
-        var deletedAcc = accountService.delete(id);
+        var deletedAcc = transferService.delete(id);
 
         return Response.ok().entity(deletedAcc).build();
     }
